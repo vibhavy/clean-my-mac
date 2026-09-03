@@ -3,14 +3,88 @@
 A small macOS app with one job: find storage you can get back, show you the
 total, and delete it only after you confirm. Win95 chrome, because why not.
 
-## Build
+## Install
+
+There are no prebuilt downloads — you build it once and copy it in. Takes about
+ten seconds.
+
+```bash
+git clone git@github.com:vibhavy/clean-my-mac.git
+cd clean-my-mac
+./build.sh
+cp -R "dist/Clean Up My Machine.app" /Applications/
+```
+
+Then launch it from Spotlight or:
+
+```bash
+open "/Applications/Clean Up My Machine.app"
+```
+
+Requires macOS 13+ and the Xcode command line tools (`xcode-select --install`) for
+the Swift compiler.
+
+### First launch
+
+The bundle is **ad-hoc signed**, not notarised — there is no Apple Developer
+account behind it. A locally built copy opens normally. But if you move it
+between machines by download or AirDrop, macOS quarantines it and refuses to open
+it with a "damaged" or "unidentified developer" warning. Clear the quarantine flag:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Clean Up My Machine.app"
+```
+
+Right-click → **Open** works too, once, and gives you an "Open anyway" button.
+
+### Keep it in the menu bar
+
+The app puts a drive icon in the menu bar and stays there after you close the
+window. To have it there after every reboot, add it under **System Settings →
+General → Login Items → Open at Login**.
+
+### Installing on another Mac
+
+`build.sh` leaves a runnable bundle in `dist/`. To hand it to another machine,
+zip it with `ditto` rather than Finder's Compress — that preserves the bundle's
+symlinks and signature:
+
+```bash
+ditto -c -k --keepParent "dist/Clean Up My Machine.app" CleanUpMyMachine.zip
+```
+
+On the other Mac, unzip, drag to `/Applications`, and clear the quarantine flag
+as above.
+
+### Update
+
+```bash
+git pull && ./build.sh && cp -R "dist/Clean Up My Machine.app" /Applications/
+```
+
+Quit the app from the menu bar first, otherwise you are copying over a running
+binary.
+
+### Uninstall
+
+```bash
+rm -rf "/Applications/Clean Up My Machine.app"
+```
+
+It writes no preferences, no support files and no login items of its own, so
+that is the whole of it.
+
+## Build from source
+
+To run it without installing:
 
 ```bash
 ./build.sh
 open "dist/Clean Up My Machine.app"
 ```
 
-Produces an ad-hoc signed `.app` in `dist/`. Requires Swift 5.9+ (Xcode 15+).
+`build.sh` compiles with SwiftPM, renders the icon, assembles the bundle and
+ad-hoc signs it. Everything lands in `dist/`, which is gitignored.
 
 ## How it works
 
