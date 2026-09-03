@@ -45,17 +45,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             try? "\(window.windowNumber)".write(toFile: dest, atomically: true, encoding: .utf8)
         }
         showWindow()
+
+        if let secs = ProcessInfo.processInfo.environment["CLEANUP_TEST_CLOSE_AFTER"],
+           let delay = Double(secs) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, self.window.isVisible else { return }
+                _ = self.windowShouldClose(self.window)
+            }
+        }
     }
 
-    /// Hide instead of destroy, so the menu bar can bring it back.
+    /// Clicking the Dock icon (or `open -a`) brings the window back.
+    func applicationShouldHandleReopen(_ sender: NSApplication,
+                                       hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { showWindow() }
+        return true
+    }
+
+    /// Closing hides the window and drops the app out of the Dock. It stays alive
+    /// behind the menu bar icon; only Quit removes it from both places.
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         window.orderOut(nil)
+        // Deferred: switching policy while the close is still in flight leaves a
+        // ghost Dock tile behind.
+        DispatchQueue.main.async { NSApp.setActivationPolicy(.accessory) }
         return false
     }
 
     @objc private func showWindow() {
+        // Back into the Dock before activating, or the window opens behind
+        // whatever the user was last looking at.
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
     }
 
     // MARK: Menu bar

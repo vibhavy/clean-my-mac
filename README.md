@@ -39,9 +39,19 @@ Right-click → **Open** works too, once, and gives you an "Open anyway" button.
 
 ### Keep it in the menu bar
 
-The app puts a drive icon in the menu bar and stays there after you close the
-window. To have it there after every reboot, add it under **System Settings →
-General → Login Items → Open at Login**.
+The app puts a drive icon in the menu bar. To have it there after every reboot,
+add it under **System Settings → General → Login Items → Open at Login**.
+
+**Close is not quit.** Closing the window hides it and drops the app out of the
+Dock, but it keeps running behind the menu bar icon — click that (or the Dock
+icon, while it is still there) to bring the window back. Only **Quit** from the
+menu bar removes it from both the Dock and the menu bar.
+
+| | Dock | Menu bar | Running |
+|---|---|---|---|
+| Open | yes | yes | yes |
+| Window closed | no | yes | yes |
+| Quit | no | no | no |
 
 ### Installing on another Mac
 
@@ -142,6 +152,14 @@ case that points the cleaner at `~/Documents` and asserts it is refused.
 ./.build/release/CleanupApp --scan --verbose  # with scan progress on stderr
 ./.build/release/CleanupApp --scan --menu     # also print the menu bar structure
 ./.build/release/CleanupApp --selftest        # guardrail + delete-path checks
+```
+
+Two env vars exist for testing the window, since this machine cannot grant
+scripted UI clicks:
+
+```bash
+CLEANUP_WINDOW_ID_FILE=/tmp/id   # app writes its NSWindow number there
+CLEANUP_TEST_CLOSE_AFTER=5       # app closes its own window after N seconds
 ```
 
 ## Known limits
